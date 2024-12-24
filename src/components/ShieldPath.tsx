@@ -38,22 +38,17 @@ const ShieldPath = () => {
 
     const clampedPosition = Math.max(0, Math.min(position, pathLength));
     
-    // Calculate x position based on y position to create varying angles
     let xOffset = 0;
     const progress = clampedPosition / pathLength;
     
     if (progress < 0.25) {
-      // First segment: 80-degree angle
-      xOffset = progress * 4 * 30; // Moving right
+      xOffset = progress * 4 * 30;
     } else if (progress < 0.5) {
-      // Second segment: opposite angle
-      xOffset = 120 - ((progress - 0.25) * 4 * 40); // Moving left
+      xOffset = 120 - ((progress - 0.25) * 4 * 40);
     } else if (progress < 0.75) {
-      // Third segment: straight
-      xOffset = 40; // Maintain position
+      xOffset = 40;
     } else {
-      // Fourth segment: slight angle
-      xOffset = 40 + ((progress - 0.75) * 4 * 20); // Moving right again
+      xOffset = 40 + ((progress - 0.75) * 4 * 20);
     }
     
     shield.style.transform = `translate(${xOffset}px, ${clampedPosition}px)`;
@@ -76,6 +71,9 @@ const ShieldPath = () => {
     setIsDragging(false);
   };
 
+  const pathSegmentStyle = "absolute left-0 w-px bg-shield-primary";
+  const invisiblePathStyle = "absolute left-0 w-px bg-transparent";
+
   return (
     <div 
       className="fixed left-1/3 top-0 h-full w-px"
@@ -84,11 +82,17 @@ const ShieldPath = () => {
       onMouseLeave={handleMouseUp}
     >
       <div ref={pathRef} className="relative h-full">
-        {/* Path segments with varying angles */}
-        <div className="absolute left-0 top-0 h-1/4 w-px bg-shield-primary opacity-100 transform rotate-[80deg] origin-top" />
-        <div className="absolute left-0 top-1/4 h-1/4 w-px bg-transparent transform -rotate-[60deg] origin-top" />
-        <div className="absolute left-0 top-2/4 h-1/4 w-px bg-shield-primary opacity-100" />
-        <div className="absolute left-0 top-3/4 h-1/4 w-px bg-transparent transform rotate-[30deg] origin-top" />
+        {/* Visible path segments */}
+        <div className={`${pathSegmentStyle} top-0 h-1/4 transform rotate-[80deg] origin-top`} />
+        <div className={`${pathSegmentStyle} top-1/4 h-1/4 transform -rotate-[60deg] origin-top`} />
+        <div className={`${pathSegmentStyle} top-2/4 h-1/4`} />
+        <div className={`${pathSegmentStyle} top-3/4 h-1/4 transform rotate-[30deg] origin-top`} />
+        
+        {/* Invisible guide path segments - exact same structure */}
+        <div className={`${invisiblePathStyle} top-0 h-1/4 transform rotate-[80deg] origin-top pointer-events-none`} />
+        <div className={`${invisiblePathStyle} top-1/4 h-1/4 transform -rotate-[60deg] origin-top pointer-events-none`} />
+        <div className={`${invisiblePathStyle} top-2/4 h-1/4 pointer-events-none`} />
+        <div className={`${invisiblePathStyle} top-3/4 h-1/4 transform rotate-[30deg] origin-top pointer-events-none`} />
         
         <div 
           ref={shieldRef}
