@@ -39,7 +39,11 @@ const ShieldPath = () => {
 
     // Ensure shield stays within path bounds
     const clampedPosition = Math.max(0, Math.min(position, pathLength));
-    shield.style.transform = `translateY(${clampedPosition}px)`;
+    
+    // Calculate x position based on y position to create the angle
+    const xOffset = (clampedPosition / pathLength) * 100; // This creates the diagonal movement
+    
+    shield.style.transform = `translate(${xOffset}px, ${clampedPosition}px)`;
   }, [scrollProgress, mousePosition, isDragging]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -61,13 +65,13 @@ const ShieldPath = () => {
 
   return (
     <div 
-      className="fixed left-1/2 top-0 h-full w-px"
+      className="fixed left-1/3 top-0 h-full w-px transform rotate-[75deg] origin-top"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
       <div ref={pathRef} className="relative h-full">
-        {/* Path segments with accurate spacing */}
+        {/* Path segments with accurate spacing and rotation */}
         <div className="absolute left-0 top-0 h-1/4 w-px bg-shield-primary opacity-100" />
         <div className="absolute left-0 top-1/4 h-1/4 w-px bg-transparent" />
         <div className="absolute left-0 top-2/4 h-1/4 w-px bg-shield-primary opacity-100" />
