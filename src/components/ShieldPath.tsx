@@ -5,6 +5,8 @@ const ShieldPath = () => {
   const pathRef = useRef<HTMLDivElement>(null);
   const shieldRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -13,7 +15,8 @@ const ShieldPath = () => {
       const scrollPosition = window.scrollY;
       const windowHeight = window.innerHeight;
       const docHeight = document.documentElement.scrollHeight;
-      const scrollPercentage = (scrollPosition / (docHeight - windowHeight)) * 100;
+      const maxScroll = docHeight - windowHeight;
+      const scrollPercentage = (scrollPosition / maxScroll) * 100;
       
       setScrollProgress(Math.min(100, Math.max(0, scrollPercentage)));
     };
@@ -29,25 +32,56 @@ const ShieldPath = () => {
     const shield = shieldRef.current;
     const pathLength = path.offsetHeight;
     
-    const position = (pathLength * scrollProgress) / 100;
-    shield.style.transform = `translateY(${position}px)`;
-  }, [scrollProgress]);
+    // Calculate position based on scroll or mouse drag
+    const position = isDragging 
+      ? mousePosition.y - path.getBoundingClientRect().top
+      : (pathLength * scrollProgress) / 100;
+
+    // Ensure shield stays within path bounds
+    const clampedPosition = Math.max(0, Math.min(position, pathLength));
+    shield.style.transform = `translateY(${clampedPosition}px)`;
+  }, [scrollProgress, mousePosition, isDragging]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!pathRef.current) return;
+    setIsDragging(true);
+    const pathRect = pathRef.current.getBoundingClientRect();
+    setMousePosition({ x: e.clientX - pathRect.left, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !pathRef.current) return;
+    const pathRect = pathRef.current.getBoundingClientRect();
+    setMousePosition({ x: e.clientX - pathRect.left, y: e.clientY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
 
   return (
-    <div className="fixed left-1/2 top-0 h-full w-px">
+    <div 
+      className="fixed left-1/2 top-0 h-full w-px"
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
       <div ref={pathRef} className="relative h-full">
-        {/* Visible line segments */}
-        <div className="absolute left-0 top-0 h-1/4 w-px bg-shield-primary" />
-        <div className="absolute left-0 top-1/2 h-1/4 w-px bg-shield-primary" />
+        {/* Path segments with accurate spacing */}
+        <div className="absolute left-0 top-0 h-1/4 w-px bg-shield-primary opacity-100" />
+        <div className="absolute left-0 top-1/4 h-1/4 w-px bg-transparent" />
+        <div className="absolute left-0 top-2/4 h-1/4 w-px bg-shield-primary opacity-100" />
+        <div className="absolute left-0 top-3/4 h-1/4 w-px bg-transparent" />
         
-        {/* Shield icon */}
+        {/* Interactive shield */}
         <div 
           ref={shieldRef}
-          className="absolute -left-4 top-0 animate-shield-floating"
-          style={{ transition: "transform 0.5s ease-out" }}
+          className="absolute -left-4 cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+          style={{ transition: isDragging ? 'none' : 'transform 0.5s ease-out' }}
         >
           <Shield 
-            className="h-8 w-8 text-shield-primary" 
+            className="h-8 w-8 text-shield-primary animate-shield-floating" 
             strokeWidth={1.5}
           />
         </div>
