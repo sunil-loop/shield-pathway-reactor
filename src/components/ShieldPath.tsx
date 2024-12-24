@@ -32,16 +32,29 @@ const ShieldPath = () => {
     const shield = shieldRef.current;
     const pathLength = path.offsetHeight;
     
-    // Calculate position based on scroll or mouse drag
     const position = isDragging 
       ? mousePosition.y - path.getBoundingClientRect().top
       : (pathLength * scrollProgress) / 100;
 
-    // Ensure shield stays within path bounds
     const clampedPosition = Math.max(0, Math.min(position, pathLength));
     
-    // Calculate x position based on y position to create the angle
-    const xOffset = (clampedPosition / pathLength) * 100; // This creates the diagonal movement
+    // Calculate x position based on y position to create varying angles
+    let xOffset = 0;
+    const progress = clampedPosition / pathLength;
+    
+    if (progress < 0.25) {
+      // First segment: 80-degree angle
+      xOffset = progress * 4 * 30; // Moving right
+    } else if (progress < 0.5) {
+      // Second segment: opposite angle
+      xOffset = 120 - ((progress - 0.25) * 4 * 40); // Moving left
+    } else if (progress < 0.75) {
+      // Third segment: straight
+      xOffset = 40; // Maintain position
+    } else {
+      // Fourth segment: slight angle
+      xOffset = 40 + ((progress - 0.75) * 4 * 20); // Moving right again
+    }
     
     shield.style.transform = `translate(${xOffset}px, ${clampedPosition}px)`;
   }, [scrollProgress, mousePosition, isDragging]);
@@ -65,19 +78,18 @@ const ShieldPath = () => {
 
   return (
     <div 
-      className="fixed left-1/3 top-0 h-full w-px transform rotate-[75deg] origin-top"
+      className="fixed left-1/3 top-0 h-full w-px"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
       <div ref={pathRef} className="relative h-full">
-        {/* Path segments with accurate spacing and rotation */}
-        <div className="absolute left-0 top-0 h-1/4 w-px bg-shield-primary opacity-100" />
-        <div className="absolute left-0 top-1/4 h-1/4 w-px bg-transparent" />
+        {/* Path segments with varying angles */}
+        <div className="absolute left-0 top-0 h-1/4 w-px bg-shield-primary opacity-100 transform rotate-[80deg] origin-top" />
+        <div className="absolute left-0 top-1/4 h-1/4 w-px bg-transparent transform -rotate-[60deg] origin-top" />
         <div className="absolute left-0 top-2/4 h-1/4 w-px bg-shield-primary opacity-100" />
-        <div className="absolute left-0 top-3/4 h-1/4 w-px bg-transparent" />
+        <div className="absolute left-0 top-3/4 h-1/4 w-px bg-transparent transform rotate-[30deg] origin-top" />
         
-        {/* Interactive shield */}
         <div 
           ref={shieldRef}
           className="absolute -left-4 cursor-grab active:cursor-grabbing"
